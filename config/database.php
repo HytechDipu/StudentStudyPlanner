@@ -1,5 +1,17 @@
 <?php
 
+// Production Environment Settings
+$appEnv = getenv('APP_ENV') ?: 'production';
+if ($appEnv === 'production') {
+    ini_set('display_errors', '0');
+    ini_set('display_startup_errors', '0');
+    error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
+} else {
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    error_reporting(E_ALL);
+}
+
 // Enable mysqli exception mode for robust error handling
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 

@@ -7,6 +7,14 @@ if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.cookie_httponly', '1');
     ini_set('session.cookie_samesite', 'Lax');
     ini_set('session.use_only_cookies', '1');
+
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+        || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443);
+
+    if ($isHttps) {
+        ini_set('session.cookie_secure', '1');
+    }
     session_start();
 }
 
