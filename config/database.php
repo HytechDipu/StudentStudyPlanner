@@ -6,7 +6,11 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $host     = getenv('DB_HOST') ?: "localhost";
 $username = getenv('DB_USER') ?: "root";
 $password = getenv('DB_PASS') !== false ? getenv('DB_PASS') : "";
-$database = getenv('DB_NAME') ?: "student_study_planner";
+$database = getenv('DB_NAME') ?: "test";
+// Prevent using 'sys' because it is MySQL's internal protected schema
+if ($database === "sys" || empty($database)) {
+    $database = "test";
+}
 $port     = (int)(getenv('DB_PORT') ?: 3306);
 $sslCa    = getenv('DB_SSL_CA') ?: null;
 
@@ -39,9 +43,10 @@ try {
 
 function ensure_database_schema(mysqli $conn): void {
     try {
-        // Check if the primary tasks table exists
-        $check = $conn->query("SHOW TABLES LIKE 'tasks'");
-        if ($check && $check->num_rows > 0) {
+        // Check if both users and tasks tables exist
+        $checkTasks = $conn->query("SHOW TABLES LIKE 'tasks'");
+        $checkUsers = $conn->query("SHOW TABLES LIKE 'users'");
+        if ($checkTasks && $checkTasks->num_rows > 0 && $checkUsers && $checkUsers->num_rows > 0) {
             return; // Schema already created
         }
 
@@ -182,7 +187,11 @@ function ensure_database_schema(mysqli $conn): void {
         ];
 
         foreach ($statements as $sql) {
-            $conn->query($sql);
+            try {
+                $conn->query($sql);
+            } catch (\Throwable $e) {
+                error_log("Schema statement notice: " . $e->getMessage());
+            }
         }
     } catch (\Throwable $t) {
         error_log("Schema auto-init error: " . $t->getMessage());
